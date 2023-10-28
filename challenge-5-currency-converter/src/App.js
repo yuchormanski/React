@@ -12,6 +12,7 @@ export default function App() {
   const [currencyTo, setCurrencyTo] = useState("USD");
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
+  const [loader, setLoader] = useState(false);
 
   function handleUserInput(value) {
     setUserInput(Number(value));
@@ -28,11 +29,15 @@ export default function App() {
       const controller = new AbortController();
 
       if (userInput === "") return;
-      if (currencyFrom === currencyTo) return;
+      if (currencyFrom === currencyTo) {
+        return setOutput(userInput);
+      }
 
       async function fetchCurrencies() {
         setError("");
         try {
+          setLoader(true);
+
           const res = await fetch(
             `https://api.frankfurter.app/latest?amount=${userInput}&from=${currencyFrom}&to=${currencyTo}`
           );
@@ -43,8 +48,10 @@ export default function App() {
 
           setOutput((output) => data.rates[currencyTo]);
           setError("");
+          setLoader(false);
         } catch (err) {
           setError(err.message);
+          setLoader(false);
         }
       }
 
@@ -62,7 +69,8 @@ export default function App() {
       <InputField onUserInput={handleUserInput} />
       <CurrencySection onCurrencyChange={handleCurrencyFrom} />
       <CurrencySection onCurrencyChange={handleCurrencyTo} />
-      <p>{output === "" ? "OUTPUT" : output}</p>
+      {loader && <p>Loading...</p>}
+      {!loader && <p>{output === "" ? "OUTPUT" : output + " " + currencyTo}</p>}
     </div>
   );
 }
